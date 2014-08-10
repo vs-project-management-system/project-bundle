@@ -1,7 +1,6 @@
 <?php
-namespace PMS\ProjectBundle\Controller;
+namespace PMS\Bundle\ProjectBundle\Controller;
 
-use \Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use \Symfony\Component\HttpFoundation\Request;
@@ -10,8 +9,6 @@ use \Pagerfanta\Pagerfanta;
 use \Pagerfanta\Adapter\DoctrineORMAdapter;
 use \Pagerfanta\Exception\NotValidCurrentPageException;
 use \Pagerfanta\View\TwitterBootstrapView;
-
-use \PMS\ProjectBundle\Entity\Status;
 
 /**
  * @Route("/statuses")
@@ -24,11 +21,12 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function indexAction()
     {
-        // get route name/params to decypher data to delimit by
+        $this->breadcrumbs->addItem('statuses');
+        
         $query = $this->get('doctrine')
                           ->getRepository('PMSProjectBundle:Status')
-                          ->createQueryBuilder('p')
-                          ->orderBy('p.updated, p.name', 'ASC');
+                          ->createQueryBuilder('c')
+                          ->orderBy('c.updated, c.name', 'ASC');
 
         $pager = new Pagerfanta(new DoctrineORMAdapter($query));
         $pager->setMaxPerPage($this->getRequest()->get('pageMax', 5));
@@ -36,7 +34,7 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
 
         return array(
           'statuses' => $pager->getCurrentPageResults(),
-          'pager'  => $pager
+          'pager' => $pager
         );
     }
 
@@ -46,11 +44,16 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function newAction(Request $request)
     {
-        $status = new Status();
-        $form = $this->createForm(new StatusFormType(), $status);
+        $this->breadcrumbs->addItem('statuses', $this->get('router')->generate('pms_status_index'));
+        
+        $status = new \PMS\Bundle\ProjectBundle\Entity\Status();
+        $form = $this->createForm(
+            new \PMS\Bundle\ProjectBundle\Form\Type\StatusFormType(),
+            $status
+        );
 
-        if ("POST" == $request->getMethod()) {
-            $form->bind($this->getRequest());
+        if ("POST" === $request->getMethod()) {
+            $form->handleRequest($this->getRequest());
             if ($form->isValid()) {
                 $em = $this->getDoctrine()->getEntityManager();
                 $em->persist($status);
@@ -62,9 +65,9 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
                 );
 
                 return $this->render(
-                    'PMSProjectBundle:Status:show.html.twig',
+                    'PMSProjectBundle:Project:show.html.twig',
                     array(
-                        'status_slug' => $status->getSlug()
+                        'status' => $status
                     )
                 );
             }
@@ -79,12 +82,20 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function editAction($slug)
     {
-
+        $this->breadcrumbs->addItem(
+            'statuses',
+            $this->get('router')
+                 ->generate('pms_status_edit', array('slug' => $slug))
+        );
+        
         $status = $this->getDoctrine()
                         ->getRepository('PMSProjectBundle:Status')
                         ->findOneBySlug($slug);
 
-        $form = $this->createForm(new \PMS\ProjectBundle\Form\Type\StatusFormType(), $status);
+        $form = $this->createForm(
+            new \PMS\ProjectBundle\Form\Type\StatusFormType(),
+            $status
+        );
 
         if (!$status) {
             $this->get('session')
@@ -106,12 +117,27 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function searchAction($query = null)
     {
-        $this->getDoctrine()
-            ->getRepository('PMSProjectBundle:Status')
-            ->search($query);
-        return array();
-    }
+        $form = $this->createForm(new \PMS\Bundle\ProjectBundle\Form\Type\ProjectSearchFormType());
 
+        if ("POST" == $this-getRequest()->getMethod()) {
+            $form->bind($this->getRequest());
+            if ($form->isValid()) {
+                $statuses = $this->getDoctrine()
+                        ->getRepository('PMSProjectBundle:Project')
+                        ->search($query);
+
+                return $this->render(
+                    'PMSProjectBundle:Project:index.html.twig',
+                    array(
+                        'statuses' => $statuses
+                    )
+                );
+            }
+        }
+
+        return array('form' => $form);
+    }
+    
     /**
      * @Route("/{slug}", name="pms_status_show")
      * @Template("PMSProjectBundle:Status:show.html.twig")
@@ -119,8 +145,8 @@ class StatusController extends \PMS\Bundle\CoreBundle\Controller\Controller
     public function showAction($slug)
     {
         $status = $this->getDoctrine()
-                        ->getRepository('PMSProjectBundle:Status')
-                        ->findOneBySlug($slug);
+                       ->getRepository('PMSProjectBundle:Status')
+                       ->findOneBySlug($slug);
 
         if (!$status) {
             $this->get('session')->getFlashBag()->add(

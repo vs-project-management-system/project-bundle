@@ -1,15 +1,14 @@
 <?php
 namespace PMS\Bundle\ProjectBundle\Controller;
 
-use \Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use \Symfony\Component\HttpFoundation\Request;
 
 use \Pagerfanta\Pagerfanta;
 use \Pagerfanta\Adapter\DoctrineORMAdapter;
-
-use \PMS\ProjectBundle\Entity\Category;
+use \Pagerfanta\Exception\NotValidCurrentPageException;
+use \Pagerfanta\View\TwitterBootstrapView;
 
 /**
  * @Route("/categories")
@@ -22,7 +21,8 @@ class CategoryController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function indexAction()
     {
-        // get route name/params to decypher data to delimit by
+        $this->breadcrumbs->addItem('categories');
+        
         $query = $this->get('doctrine')
                           ->getRepository('PMSProjectBundle:Category')
                           ->createQueryBuilder('c')
@@ -44,14 +44,16 @@ class CategoryController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function newAction(Request $request)
     {
-        $category = new Category();
+        $this->breadcrumbs->addItem('categories', $this->get('router')->generate('pms_category_index'));
+        
+        $category = new \PMS\Bundle\ProjectBundle\Entity\Category();
         $form = $this->createForm(
-            new \PMS\ProjectBundle\Form\Type\CategoryFormType(),
+            new \PMS\Bundle\ProjectBundle\Form\Type\CategoryFormType(),
             $category
         );
 
-        if ('POST' == $this->getRequest()->getMethod()) {
-            $form->bind($this->getRequest());
+        if ("POST" === $request->getMethod()) {
+            $form->handleRequest($this->getRequest());
             if ($form->isValid()) {
                 $em = $this->getDoctrine()->getEntityManager();
                 $em->persist($category);
@@ -63,15 +65,15 @@ class CategoryController extends \PMS\Bundle\CoreBundle\Controller\Controller
                 );
 
                 return $this->render(
-                    'PMSProjectBundle:Category:show.html.twig',
-                    array('category_slug' => $category->getSlug())
+                    'PMSProjectBundle:Project:show.html.twig',
+                    array(
+                        'category' => $category
+                    )
                 );
             }
         }
 
-        return array(
-          'form' => $form->createView()
-        );
+        return array('form' => $form->createView());
     }
 
     /**
@@ -80,7 +82,12 @@ class CategoryController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function editAction($slug)
     {
-
+        $this->breadcrumbs->addItem(
+            'categories',
+            $this->get('router')
+                 ->generate('pms_category_edit', array('slug' => $slug))
+        );
+        
         $category = $this->getDoctrine()
                         ->getRepository('PMSProjectBundle:Category')
                         ->findOneBySlug($slug);
@@ -103,6 +110,34 @@ class CategoryController extends \PMS\Bundle\CoreBundle\Controller\Controller
         return array('form' => $form->createView());
     }
 
+    /**
+     * @Route("/search/{query}", name="pms_category_search_q")
+     * @Route("/search", name="pms_category_search")
+     * @Template("PMSProjectBundle:Category:search.html.twig")
+     */
+    public function searchAction($query = null)
+    {
+        $form = $this->createForm(new \PMS\Bundle\ProjectBundle\Form\Type\ProjectSearchFormType());
+
+        if ("POST" == $this-getRequest()->getMethod()) {
+            $form->bind($this->getRequest());
+            if ($form->isValid()) {
+                $categories = $this->getDoctrine()
+                        ->getRepository('PMSProjectBundle:Project')
+                        ->search($query);
+
+                return $this->render(
+                    'PMSProjectBundle:Project:index.html.twig',
+                    array(
+                        'categories' => $categories
+                    )
+                );
+            }
+        }
+
+        return array('form' => $form);
+    }
+    
     /**
      * @Route("/{slug}", name="pms_category_show")
      * @Template("PMSProjectBundle:Category:show.html.twig")

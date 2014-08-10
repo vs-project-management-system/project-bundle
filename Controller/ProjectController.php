@@ -1,7 +1,6 @@
 <?php
-    namespace PMS\Bundle\ProjectBundle\Controller;
+namespace PMS\Bundle\ProjectBundle\Controller;
 
-use \Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use \Symfony\Component\HttpFoundation\Request;
@@ -11,8 +10,9 @@ use \Pagerfanta\Adapter\DoctrineORMAdapter;
 use \Pagerfanta\Exception\NotValidCurrentPageException;
 use \Pagerfanta\View\TwitterBootstrapView;
 
-use \PMS\Bundle\ProjectBundle\Entity\Project;
-
+/**
+ * @Route("/projects")
+ */
 class ProjectController extends \PMS\Bundle\CoreBundle\Controller\Controller
 {
     /**
@@ -21,7 +21,8 @@ class ProjectController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function indexAction()
     {
-        // get route name/params to decypher data to delimit by
+        $this->breadcrumbs->addItem('projects');
+        
         $query = $this->get('doctrine')
                           ->getRepository('PMSProjectBundle:Project')
                           ->createQueryBuilder('p')
@@ -43,13 +44,15 @@ class ProjectController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function newAction(Request $request)
     {
-        $project = new Project();
+        $this->breadcrumbs->addItem('projects', $this->get('router')->generate('pms_project_index'));
+        
+        $project = new \PMS\Bundle\ProjectBundle\Entity\Project();
         $form = $this->createForm(
             new \PMS\Bundle\ProjectBundle\Form\Type\ProjectFormType(),
             $project
         );
 
-        if ("POST" == $request->getMethod()) {
+        if ("POST" === $request->getMethod()) {
             $form->handleRequest($this->getRequest());
             if ($form->isValid()) {
                 $em = $this->getDoctrine()->getEntityManager();
@@ -79,7 +82,12 @@ class ProjectController extends \PMS\Bundle\CoreBundle\Controller\Controller
      */
     public function editAction($slug)
     {
-
+        $this->breadcrumbs->addItem(
+            'projects',
+            $this->get('router')
+                 ->generate('pms_project_edit', array('slug' => $slug))
+        );
+        
         $project = $this->getDoctrine()
                         ->getRepository('PMSProjectBundle:Project')
                         ->findOneBySlug($slug);
