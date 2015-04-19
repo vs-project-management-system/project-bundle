@@ -1,9 +1,6 @@
 <?php
+namespace PMS\Bundle\ProjectBundle;
 
-namespace PMS\ProjectBundle;
-
-use Symfony\Component\HttpKernel\Bundle\Bundle;
-
-class PMSProjectBundle extends Bundle
+class PMSProjectBundle extends \Knp\RadBundle\AppBundle\Bundle
 {
 }

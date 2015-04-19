@@ -1,86 +1,93 @@
 <?php
 namespace PMS\Bundle\ProjectBundle\Entity;
 
-use \Doctrine\ORM\Mapping as ORM;
-use \Symfony\Component\Validator\Constraints as Assert;
+use \PMS\Bundle\CoreBundle\Traits\TimestampableTrait;
+use \PMS\Bundle\CoreBundle\Traits\SluggableTrait;
 
-use \Gedmo\Mapping\Annotation as Gedmo;
-
-use PMS\CoreBundle\Traits\TimestampableTrait;
-use PMS\CoreBundle\Traits\SlugableTrait;
-
-/**
- * PMS\ProjectBundle\Entity\Project
- *
- * @ORM\Table(name="project")
- * @ORM\Entity(repositoryClass="\PMS\Bundle\ProjectBundle\Repository\ProjectRepository")
- */
-class Project extends \PMS\Component\Project\Model\Project
+class Project
 {
     use TimestampableTrait;
-    use SlugableTrait;
+    use SluggableTrait;
     
     /**
-     * @inheritdoc
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * Id
+     * @var integer
      */
     protected $id;
 
     /**
-     * @inheritdoc
-     * @ORM\Column(name="name", type="string", length=150)
-     * @Assert\NotBlank()
+     * Name
+     * @var string
      */
     protected $name;
 
     /**
-     * @inheritdoc
-     * @ORM\Column(name="blurb", type="string", length=30)
+     * Blurb
+     * @var string
      */
     protected $blurb;
 
     /**
-     * @inheritdoc
-     * @ORM\Column(name="description", type="text")
+     * Description
+     * @var string
      */
-    protected $description = '';
+    protected $description;
 
     /**
-     * @inheritdoc
-     * @ORM\Column(name="url", type="text")
-     * @Assert\Url()
+     * DevUrl
+     * @var string
      */
-    protected $url;
+    protected $devUrl;
+    
+    /**
+     * ProdUrl
+     * @var string
+     */
+    protected $prodUrl;
+    
+    /**
+     * Image
+     * @var string
+     */
+    protected $image;
 
     /**
-     * @inheritdoc
-     * @ORM\ManyToOne(targetEntity="Status", inversedBy="project")
-     * @ORM\JoinColumn(name="status_id", referencedColumnName="id")
+     * Type
+     * @var \PMS\Bundle\ProjectBundle\Entity\Type
+     */
+    protected $type;
+    
+    /**
+     * Status
+     * @var \PMS\Bundle\ProjectBundle\Entity\Status
      */
     protected $status;
 
     /**
-     * @inheritdoc
-     * @ORM\ManyToOne(targetEntity="Category", inversedBy="project")
-     * @ORM\JoinColumn(name="category_id", referencedColumnName="id")
+     * Category
+     * @var \PMS\Bundle\ProjectBundle\Entity\Category
      */
     protected $category;
 
     /**
-     * @inheritdoc
-     * @ORM\ManyToOne(targetEntity="PMS\UserBundle\Entity\Client", inversedBy="project")
-     * @ORM\JoinColumn(name="client_id", referencedColumnName="id")
+     * Client
+     * @var \PMS\Bundle\UserBundle\Entity\Client
      */
     protected $client;
 
     /**
-     * @inheritdoc
-     * @ORM\OneToMany(targetEntity="PMS\UserBundle\Entity\Developer", mappedBy="project")
+     * Developers
+     * @var \Doctrine\Common\Collections\ArrayCollection
      */
     protected $developers;
+    
+    /**
+     * Construct
+     */
+    public function __construct()
+    {
+        $this->developers = new \Doctrine\Common\Collections\ArrayCollection();
+    }
 
     /**
      * Get Id
@@ -92,7 +99,8 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get name
+     * @return string
      */
     public function getName()
     {
@@ -100,7 +108,9 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Set name
+     * @param string $name
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
     public function setName($name)
     {
@@ -110,7 +120,8 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get blurb
+     * @return string
      */
     public function getBlurb()
     {
@@ -118,17 +129,20 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Set blurb
+     * @param string $blurb
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
-    public function setBlurb($description)
+    public function setBlurb($blurb)
     {
-        $this->blurb = $description;
+        $this->blurb = $blurb;
 
         return $this;
     }
 
     /**
-     * @inheritdoc
+     * Get description
+     * @return string
      */
     public function getDescription()
     {
@@ -136,7 +150,9 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Set description
+     * @param type $description
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
     public function setDescription($description)
     {
@@ -146,17 +162,41 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get prod url
+     * @return string
      */
-    public function getUrl()
+    public function getProdUrl()
     {
         return $this->url;
     }
 
     /**
-     * @inheritdoc
+     * Set prod url
+     * @param string $url
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
-    public function setUrl($url)
+    public function setProdUrl($url)
+    {
+        $this->url = $url;
+
+        return $this;
+    }
+    
+    /**
+     * Get dev url
+     * @return string
+     */
+    public function getDevUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * Set dev url
+     * @param string $url
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
+     */
+    public function setDevUrl($url)
     {
         $this->url = $url;
 
@@ -164,7 +204,8 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get status
+     * @return \PMS\Bundle\ProjectBundle\Entity\Status
      */
     public function getStatus()
     {
@@ -172,7 +213,9 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Set status
+     * @param \PMS\Bundle\ProjectBundle\Entity\Status $status
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
     public function setStatus(\PMS\Bundle\ProjectBundle\Entity\Status $status)
     {
@@ -182,7 +225,8 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get category
+     * @return \PMS\Bundle\ProjectBundle\Entity\Category
      */
     public function getCategory()
     {
@@ -190,7 +234,9 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Set category
+     * @param \PMS\Bundle\ProjectBundle\Entity\Category $category
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
     public function setCategory(\PMS\Bundle\ProjectBundle\Entity\Category $category)
     {
@@ -200,7 +246,8 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get client
+     * @return \PMS\Bundle\UserBundle\Entity\Client
      */
     public function getClient()
     {
@@ -208,7 +255,9 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Set client
+     * @param \PMS\Bundle\UserBundle\Entity\Client $client
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
     public function setClient(\PMS\Bundle\UserBundle\Entity\Client $client = null)
     {
@@ -218,7 +267,9 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Add developer
+     * @param \PMS\Bundle\UserBundle\Entity\Developer $developer
+     * @return \PMS\Bundle\ProjectBundle\Entity\Project
      */
     public function addDeveloper(\PMS\Bundle\UserBundle\Entity\Developer $developer)
     {
@@ -228,15 +279,27 @@ class Project extends \PMS\Component\Project\Model\Project
     }
 
     /**
-     * @inheritdoc
+     * Get developers
+     * @return \Doctrine\Collections\ArrayCollection
      */
     public function getDevelopers()
     {
         return $this->developers;
     }
+    
+    /**
+     * Get developer
+     * @param string $developer
+     * @return \PMS\Bundle\UserBundle\Entity\Developer
+     */
+    public function getDeveloper($developer)
+    {
+        return $this->developers->get($developer);
+    }
 
     /**
-     * @inheritdoc
+     * Remove developer
+     * @param \PMS\Bundle\UserBundle\Entity\Developer $developer
      */
     public function removeDeveloper(\PMS\Bundle\UserBundle\Entity\Developer $developer)
     {

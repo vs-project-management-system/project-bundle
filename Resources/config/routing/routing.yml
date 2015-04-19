@@ -1,0 +1,18 @@
+'PMSProjectBundle:Projects':
+    defaults:
+        _resources:
+            "projects": { service: "pms_project.entity.project_repository", method: "findAll"}
+            "project":  {service: "pms_project.entity.project_repository", method: "find", arguments: [name: "id"]}
+            "session":   {service: "service_container", method: "get",  arguments: [value: "session"]}
+'PMSProjectBundle:Types':
+    defaults:
+        _resources:
+            "types": { service: "pms_project.entity.type_repository", method: "findAll"}
+            "type":  {service: "pms_project.entity.type_repository", method: "find", arguments: [name: "id"]}
+            "session":   {service: "service_container", method: "get",  arguments: [value: "session"]}
+'PMSProjectBundle:Categories':
+    defaults:
+        _resources:
+            "categories": {service: "pms_project.entity.category_repository", method: "findAll"}
+            "category": {service: "pms_project.entity.category_repository", method: "find", arguments: [name: "id"]}
+            "session": {service: "service_container", method: "get", arguments: [value: "session"]}
